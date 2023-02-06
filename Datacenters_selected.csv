@@ -1,0 +1,37 @@
+AU,Provider,Continent,Country,City,Latitude,Longitude
+ap-southeast-2.ec2.cloudharmony.net,Amazon EC2,OC,AU,Sydney,-33.8591,151.2002
+australia-southeast1.gce.cloudharmony.net,Google,OC,AU,Sydney,-33.8591,151.2002
+australia-east.azure.cloudharmony.net,Microsoft,OC,AU,Sydney,-33.8591,151.2002
+sa-east-1.ec2.cloudharmony.net,Amazon EC2,SA,BR,Sao Paulo,-23.5475,-46.6361
+southamerica-east1.gce.cloudharmony.net,Google,SA,BR,Sao Paulo,-23.5475,-46.6361
+brazil-south.azure.cloudharmony.net,Microsoft,SA,BR,Campinas,-22.9035,-47.0565
+ca-central-1.ec2.cloudharmony.net,Amazon EC2,NA,CA,Montreal,45.4995,-73.5848
+northamerica-northeast1.gce.cloudharmony.net,Google,NA,CA,Montreal,45.4995,-73.5848
+canada-east.azure.cloudharmony.net,Microsoft,NA,CA,Quebec,46.7949,-71.247
+eu-central-1.ec2.cloudharmony.net,Amazon EC2,EU,DE,Frankfurt am Main,50.1188,8.6843
+europe-west3.gce.cloudharmony.net,Google,EU,DE,Frankfurt am Main,50.1188,8.6843
+germany-westcentral.azure.cloudharmony.net,Microsoft,EU,DE,Frankfurt am Main,50.1188,8.6843
+eu-west-2.ec2.cloudharmony.net,Amazon EC2,EU,GB,London,51.5164,-0.093
+europe-west2.gce.cloudharmony.net,Google,EU,GB,London,51.5164,-0.093
+uk-south.azure.cloudharmony.net,Microsoft,EU,GB,London,51.5164,-0.093
+ap-east-1.ec2.cloudharmony.net,Amazon EC2,AS,HK,Hong Kong,22.25,114.1667
+asia-east2.gce.cloudharmony.net,Google,AS,HK,Central,22.2795,114.146
+asia-east.azure.cloudharmony.net,Microsoft,AS,HK,Central,22.2795,114.146
+ap-south-1.ec2.cloudharmony.net,Amazon EC2,AS,IN,Mumbai,19.0748,72.8856
+asia-south1.gce.cloudharmony.net,Google,AS,IN,Mumbai,19.0748,72.8856
+india-west.azure.cloudharmony.net,Microsoft,AS,IN,Mumbai,19.0748,72.8856
+ap-northeast-1.ec2.cloudharmony.net,Amazon EC2,AS,JP,Tokyo,35.685,139.7514
+asia-northeast1.gce.cloudharmony.net,Google,AS,JP,Tokyo,35.685,139.7514
+japan-east.azure.cloudharmony.net,Microsoft,AS,JP,Tokyo,35.685,139.7514
+ap-northeast-2.ec2.cloudharmony.net,Amazon EC2,AS,KR,Incheon,37.4562,126.7288
+asia-northeast3.gce.cloudharmony.net,Google,AS,KR,Seoul,37.5985,126.9783
+korea-central.azure.cloudharmony.net,Microsoft,AS,KR,Seoul,37.5985,126.9783
+ap-southeast-1.ec2.cloudharmony.net,Amazon EC2,AS,SG,Ulu Bedok,1.3223,103.9439
+asia-southeast1.gce.cloudharmony.net,Google,AS,SG,Singapore,1.2929,103.8547
+asia-southeast.azure.cloudharmony.net,Microsoft,AS,SG,Singapore,1.2929,103.8547
+us-east-1.ec2.cloudharmony.net,Amazon EC2,NA,US,Ashburn,39.0481,-77.4728
+us-west-1.ec2.cloudharmony.net,Amazon EC2,NA,US,San Jose,37.3388,-121.8914
+us-west2-a.gce.cloudharmony.net,Google,NA,US,Los Angeles,34.0544,-118.244
+us-east4.gce.cloudharmony.net,Google,NA,US,Washington,38.8939,-77.0365
+us-east.azure.cloudharmony.net,Microsoft,NA,US,Washington,38.7095,-78.1539
+us-west.azure.cloudharmony.net,Microsoft,NA,US,San Jose,37.3388,-121.8914

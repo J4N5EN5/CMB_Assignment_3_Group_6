@@ -1,0 +1,1 @@
+{"error": {"detail": "There was a problem with your request", "status": 400, "title": "Bad Request", "code": 102, "errors": [{"source": {"pointer": "/definitions/0/interval"}, "detail": "A one-off measurement cannot have the interval field set"}]}}

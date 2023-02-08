@@ -5,9 +5,9 @@ australia-east.azure.cloudharmony.net,Microsoft,OC,AU,Sydney,-33.8591,151.2002
 sa-east-1.ec2.cloudharmony.net,Amazon EC2,SA,BR,Sao Paulo,-23.5475,-46.6361
 southamerica-east1.gce.cloudharmony.net,Google,SA,BR,Sao Paulo,-23.5475,-46.6361
 brazil-south.azure.cloudharmony.net,Microsoft,SA,BR,Sao Paulo,-23.5475,-46.6361
-ca-central-1.ec2.cloudharmony.net,Amazon EC2,NA,CA,Montreal,45.4995,-73.5848
-northamerica-northeast1.gce.cloudharmony.net,Google,NA,CA,Montreal,45.4995,-73.5848
-canada-east.azure.cloudharmony.net,Microsoft,NA,CA,Montreal,45.4995,-73.5848
+ca-central-1.ec2.cloudharmony.net,Amazon EC2,NA,CA,Toronto,43.6644,-79.4195
+northamerica-northeast1.gce.cloudharmony.net,Google,NA,CA,Toronto,43.6644,-79.4195
+canada-central.azure.cloudharmony.net,Microsoft,NA,CA,Toronto,43.6644,-79.4195
 eu-central-1.ec2.cloudharmony.net,Amazon EC2,EU,DE,Frankfurt am Main,50.1188,8.6843
 europe-west3.gce.cloudharmony.net,Google,EU,DE,Frankfurt am Main,50.1188,8.6843
 germany-westcentral.azure.cloudharmony.net,Microsoft,EU,DE,Frankfurt am Main,50.1188,8.6843
@@ -15,8 +15,8 @@ eu-west-2.ec2.cloudharmony.net,Amazon EC2,EU,GB,London,51.5164,-0.093
 europe-west2.gce.cloudharmony.net,Google,EU,GB,London,51.5164,-0.093
 uk-south.azure.cloudharmony.net,Microsoft,EU,GB,London,51.5164,-0.093
 ap-east-1.ec2.cloudharmony.net,Amazon EC2,AS,HK,Hong Kong,22.25,114.1667
-asia-east2.gce.cloudharmony.net,Google,AS,HK,Central,22.25,114.1667
-asia-east.azure.cloudharmony.net,Microsoft,AS,HK,Central,22.25,114.1667
+asia-east2.gce.cloudharmony.net,Google,AS,HK,Hong Kong,22.25,114.1667
+asia-east.azure.cloudharmony.net,Microsoft,AS,HK,Hong Kong,22.25,114.1667
 ap-south-1.ec2.cloudharmony.net,Amazon EC2,AS,IN,Mumbai,19.0748,72.8856
 asia-south1.gce.cloudharmony.net,Google,AS,IN,Mumbai,19.0748,72.8856
 india-west.azure.cloudharmony.net,Microsoft,AS,IN,Mumbai,19.0748,72.8856

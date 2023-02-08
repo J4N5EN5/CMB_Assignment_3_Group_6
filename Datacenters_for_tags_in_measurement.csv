@@ -6,7 +6,7 @@ index,AU,Continent,Datacenter_name,Country,Provider,City,Latitude,Longitude
 5,sa-east-1.ec2.cloudharmony.net,SA,center_BR,BR,Amazon EC2,Sao Paulo,-23.5475,-46.6361
 6,southamerica-east1.gce.cloudharmony.net,SA,center_BR,BR,Google,Sao Paulo,-23.5475,-46.6361
 7,ca-central-1.ec2.cloudharmony.net,NA,center_CA,CA,Amazon EC2,Montreal,45.4995,-73.5848
-8,canada-east.azure.cloudharmony.net,NA,center_CA,CA,Microsoft,Quebec,46.7949,-71.247
+8,canada-central.azure.cloudharmony.net,NA,center_CA,CA,Microsoft,Toronto,46.7949,-71.247
 9,northamerica-northeast1.gce.cloudharmony.net,NA,center_CA,CA,Google,Montreal,45.4995,-73.5848
 10,eu-central-1.ec2.cloudharmony.net,EU,center_DE,DE,Amazon EC2,Frankfurt am Main,50.1188,8.6843
 11,europe-west3.gce.cloudharmony.net,EU,center_DE,DE,Google,Frankfurt am Main,50.1188,8.6843

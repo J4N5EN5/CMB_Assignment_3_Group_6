@@ -220,7 +220,8 @@ def create_mapping(df_probes, df_datacenters):
 
         if probe.continent_code == "NA":
             if probe.country_code == "US":
-                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), 'SameCountry')
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]),
+                                           'SameCountry')
                 probe_dc_ca = make_mapping(df_probe, dc_canada, 'NeighborCountry')
                 probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
                 probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
@@ -230,7 +231,8 @@ def create_mapping(df_probes, df_datacenters):
 
             elif probe.country_code == "CA":
                 probe_dc_ca = make_mapping(df_probe, dc_canada, 'SameCountry')
-                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), 'NeighborCountry')
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]),
+                                           'NeighborCountry')
                 probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
                 probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
 
@@ -283,6 +285,7 @@ data_center_tag = pd.read_csv("Datacenters_for_tags_in_measurement.csv", keep_de
 post_body = []
 post_name = []
 debug_information = []
+
 
 def create_ping_json(datacenter_domain_name, probe_set):
     # I want to create several tags in the measurement
@@ -366,7 +369,6 @@ def create_ping_json(datacenter_domain_name, probe_set):
         post_name.append(description_batch)
 
 
-
 def main():
     # Load the config file containing the parameters to create our measurements
     parameters = yaml.load(open('config.yml', 'r'), Loader=yaml.FullLoader)
@@ -408,4 +410,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

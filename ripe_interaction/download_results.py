@@ -52,7 +52,7 @@ def add_datacenter_information(df_data, path_to_store):
         data = yaml.safe_load(f)
     df_datacenter = pd.read_csv("{}/datacenter_list.csv".format(path_to_store))
     df_mapping = pd.read_csv("ripe_interaction/mapping.csv", usecols=['AU', 'id', 'Scenario',
-                                                                      'Continent', 'Country', 'City'])
+                                                                      'Continent', 'Country', 'City', 'connection_type'])
     df_mapping.rename(columns={'id': 'prb_id'}, inplace=True)
     # We replace the temporary indices with the msm_ids
     df_datacenter = df_datacenter.replace({"index": data})

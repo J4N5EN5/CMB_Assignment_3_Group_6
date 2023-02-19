@@ -1,77 +1,80 @@
 import pandas as pd
 import json
-import matplotlib.pyplot as plt
-import plotly.express as px
 import yaml
 from geopy.distance import geodesic
-from datetime import datetime
+import numpy as np
+from enum import Enum
 
-measurement_counter = 0
 
 def filter_excluded_tags_and_inactive_probes(df_probes, excluded_tags):
     """
-    Filter out excluded tags and inactive probes
-    :param df_probes:
-    :param excluded_tags:
-    :return:
+    :param df_probes: dataframe containing all probes form the ripe atlas
+    :param excluded_tags: list of tags to be generally excluded
+    :return: cleaned dataframe for further filtering
     """
-    df_connected_probes = df_probes[df_probes['status_name'] == 'Connected']
+    df_connected_probes = df_probes.copy()
+    df_connected_probes = df_connected_probes[df_connected_probes['status_name'] == 'Connected']
+    # Filter out all probes that contain at least one of the tags in excluded_tags
     df_filtered = df_connected_probes[~df_connected_probes['tags'].apply(lambda x: any(i in x for i in excluded_tags))]
     return df_filtered
 
+
 def get_starlink_probes(df_probes):
     """
-    Get starlink probes
-    :param df_probes: dataframe with probes
+    :param df_probes: dataframe with initially cleaned probes
     :return: dataframe with starlink probes
     """
+    # only keep probes that either contain a tag "starlink" or have asn_v4 == 14593
     df_starlink = df_probes[(df_probes['tags'].apply(
         lambda x: any(i in x for i in ['starlink']))) | (df_probes['asn_v4'] == 14593)]
-    df_starlink['type'] = 'starlink'
+    df_starlink.loc[:, 'connection_type'] = 'starlink'
     return df_starlink
 
 
-def get_probes_by_tag_filtering(df_probes, required_tags, included_tags, excluded_tags, probe_type):
+def get_probes_by_tag_filtering(df_probes, required_tags, included_tags, excluded_tags, connection_type):
     """
-    Get cellular probes
-    :param df_probes: dataframe with probes
-    :param required_tags:
-    :param included_tags:
-    :param excluded_tags:
-    :param probe_type: descriptive name for the probe type, e.g. wifi, cellular, etc.
-    :return: dataframe with cellular probes
+    Filters probes with three different tag lists and adds a column to indicate the connection type
+    :param df_probes: dataframe with initially cleaned probes
+    :param required_tags: list of tags that must be included
+    :param included_tags: list of tags from which at least one must be included
+    :param excluded_tags: list of tags that must not be included
+    :param connection_type: descriptive name for the connection type, e.g. wifi, cellular, etc.
+    :return: dataframe with probes according to the connection type filters
     """
-    df_filtered = df_probes[(df_probes['tags'].apply(
-        lambda x: all(i in x for i in required_tags) & any(i in x for i in included_tags)))]
+    # only keep probes that contain all tags in required_tags and at least one tag in included_tags
+    df_filtered = df_probes[df_probes['tags'].apply(
+        lambda x: all(i in x for i in required_tags) & any(i in x for i in included_tags))]
+    # Filter out all probes that contain at least one of the tags in excluded_tags
     df_filtered = df_filtered[~(df_filtered['tags'].apply(lambda x: any(i in x for i in excluded_tags)))]
-    df_filtered['type'] = probe_type
+    df_filtered['connection_type'] = connection_type
     return df_filtered
 
 
-def get_probes_by_proximity(df_probes, df_probes_to_compare, max_distance):
+def get_ethernet_probes_by_proximity(df_probes, df_probes_to_compare):
     """
-    Get probes by proximity
-    :param df_probes: dataframe with probes
-    :param df_probes_to_compare: dataframe with probes to compare
-    :param max_distance: max distance in km
-    :return: dataframe with probes
+    Find the closest probe to each probe in df_probes from df_probes_to_compare
+    :param df_probes: dataframe with cellular or Wi-Fi probes
+    :param df_probes_to_compare: dataframe with ethernet probes
+    :return: dataframe containing the closest ethernet probe for each probe in df_probes
     """
     df_probes_by_proximity = pd.DataFrame()
     for probe in df_probes.itertuples(name='Probe'):
         lat, long = probe.latitude, probe.longitude
-
+        # initialize with a very large distance
         dist_min = float("inf")
         probe_min = pd.Series(dtype=object)
         for probe_to_compare in df_probes_to_compare.itertuples(name='ProbeToCompare', index=False):
             lat_to_compare, long_to_compare = probe_to_compare.latitude, probe_to_compare.longitude
             dist = geodesic((lat, long), (lat_to_compare, long_to_compare)).km
 
+            # only consider probes that are closer than the current minimum
             if dist_min > dist > 0:
                 dist_min = dist
                 probe_min = pd.Series(probe_to_compare, index=df_probes_to_compare.columns)
 
-        if dist_min < max_distance:
-            df_probes_by_proximity = pd.concat([df_probes_by_proximity, probe_min.to_frame().T], axis=0)
+        # add the closest probe to the dataframe
+        df_probes_by_proximity = pd.concat([df_probes_by_proximity, probe_min.to_frame().T], axis=0)
+    df_probes_by_proximity['connection_type'] = 'ethernet'
 
     return df_probes_by_proximity
 
@@ -113,22 +116,39 @@ def convert_country_alpha2_to_continent(country_2_code):
     return COUNTRY_ALPHA2_TO_CONTINENT[country_2_code]
 
 
-def make_mapping(df_probe, dc_city):
-    df_probe_city = pd.concat([df_probe]*len(dc_city), ignore_index=True)
+def make_mapping(df_probe, dc_city, scenario):
+    """
+    This function creates a mapping between probes and datacenters.
+    :param df_probe: The single probe we want to map to datacenters
+    :param dc_city: The datacenters we want to map to the probe
+    :param scenario: Defines the location of the datacenters
+    :return: A dataframe with the probe and the datacenter mapping
+    """
+    # Create a dataframe with the probe repeated for each datacenter
+    df_probe_city = pd.concat([df_probe] * len(dc_city), ignore_index=True)
     probe_dc_city = pd.concat([df_probe_city, dc_city.reset_index(drop=True)], axis=1)
+    probe_dc_city['Scenario'] = scenario
     return probe_dc_city
 
 
-def get_closest(probe, dc_list):
+def get_closest_datacenter_to_probe(probe, dc_list):
+    """
+    This function returns the closest datacenter to a probe
+    :param probe: Probe in question
+    :param dc_list: Datacenters to compare to
+    :return: closest datacenter
+    """
     probe_lat, probe_long = probe.latitude, probe.longitude
 
     dc_closest = pd.DataFrame()
+    # Set the initial distance to infinity
     min_dist = float("inf")
 
     for dc in dc_list:
         dc_lat, dc_long = dc['Latitude'].mean(), dc['Longitude'].mean()
         dist = geodesic((probe_lat, probe_long), (dc_lat, dc_long)).km
 
+        # If the distance is smaller than the current minimum, update the minimum
         if dist < min_dist:
             min_dist = dist
             dc_closest = dc
@@ -136,144 +156,125 @@ def get_closest(probe, dc_list):
     return dc_closest
 
 
-def create_mapping(df_datacenters):
+def create_mapping(df_probes, df_datacenters):
+    """
+    This function is used to define which probes are mapped to which datacenters.
+    :param df_probes: all probes we want to map to datacenters and thus use in our measurements
+    :param df_datacenters: the datacenters we chose to use in our measurements
+    :return: Dataframe containing the final list of mappings we want to use for measurements
+    """
     probe_datacenter_mapping = pd.DataFrame()
 
+    # Create dataframes containing the datacenters for each location we chose
     dc_frankfurt = df_datacenters[df_datacenters["City"] == 'Frankfurt am Main']
     dc_london = df_datacenters[df_datacenters["City"] == 'London']
-    dc_washington = df_datacenters[df_datacenters["City"] == 'Washington']
-    dc_hongkong = df_datacenters[df_datacenters["Country"] == 'HK']
     dc_useast = df_datacenters[(df_datacenters["City"] == 'Washington') | (df_datacenters["City"] == 'Ashburn')]
     dc_uswest = df_datacenters[(df_datacenters["City"] == 'San Jose') | (df_datacenters["City"] == 'Los Angeles')]
-    dc_southamerica = df_datacenters[df_datacenters["Continent"] == 'SA']
+
+    dc_hongkong = df_datacenters[df_datacenters["Country"] == 'HK']
     dc_canada = df_datacenters[df_datacenters["Country"] == 'CA']
     dc_mumbai = df_datacenters[df_datacenters["Country"] == 'IN']
-    dc_oceanien = df_datacenters[df_datacenters["Continent"] == "OC"]
-    dc_asia = df_datacenters[df_datacenters["Continent"] == "AS"]
     dc_singapore = df_datacenters[df_datacenters["Country"] == "SG"]
 
-    for probe in df_all_probes.itertuples(name='Probe', index=False):
-        df_probe = pd.Series(probe, index=df_all_probes.columns).to_frame().T
+    dc_southamerica = df_datacenters[df_datacenters["Continent"] == 'SA']
+    dc_oceanien = df_datacenters[df_datacenters["Continent"] == "OC"]
+    dc_asia = df_datacenters[df_datacenters["Continent"] == "AS"]
+
+    # Iterate over all probes and decide which datacenters to map to them. To each probe we map 4 datacenters with
+    # different locations.
+    for probe in df_probes.itertuples(name='Probe', index=False):
+        df_probe = pd.Series(probe, index=df_probes.columns).to_frame().T
 
         if probe.continent_code == "EU":
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
-            probe_dc_lon = make_mapping(df_probe, dc_london)
-            probe_dc_use = make_mapping(df_probe, dc_useast)
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong)
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'SameCountry')
+            probe_dc_lon = make_mapping(df_probe, dc_london, 'NeighborCountry')
+            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_fra, probe_dc_lon, probe_dc_use, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "AS":
             if probe.country_code in ["HK", "SG"]:
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong)
-                probe_dc_sg = make_mapping(df_probe, dc_singapore)
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'SameCountry')
+                probe_dc_sg = make_mapping(df_probe, dc_singapore, 'NeighborCountry')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_hon, probe_dc_sg],
                                                      ignore_index=True)
             elif probe.country_code in dc_asia["Country"].unique():
-                probe_dc_closest = make_mapping(df_probe, dc_asia[dc_asia["Country"] == probe.country_code])
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong)
+                probe_dc_closest = make_mapping(df_probe, dc_asia[dc_asia["Country"] == probe.country_code],
+                                                'SameCountry')
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'NeighborCountry')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_closest, probe_dc_hon],
                                                      ignore_index=True)
             else:
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong)
-                probe_dc_sg = make_mapping(df_probe, dc_singapore)
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'SameCountry')
+                probe_dc_sg = make_mapping(df_probe, dc_singapore, 'NeighborCountry')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_hon, probe_dc_sg],
                                                      ignore_index=True)
 
-            probe_dc_use = make_mapping(df_probe, dc_useast)
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
+            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_use, probe_dc_fra],
                                                  ignore_index=True)
 
         if probe.continent_code == "NA":
             if probe.country_code == "US":
-                probe_dc_us = make_mapping(df_probe, get_closest(probe, [dc_useast, dc_uswest]))
-                probe_dc_ca = make_mapping(df_probe, dc_canada)
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica)
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), 'SameCountry')
+                probe_dc_ca = make_mapping(df_probe, dc_canada, 'NeighborCountry')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_us, probe_dc_ca, probe_dc_sa, probe_dc_fra], ignore_index=True)
 
-
             elif probe.country_code == "CA":
-                probe_dc_ca = make_mapping(df_probe, dc_canada)
-                probe_dc_us = make_mapping(df_probe, get_closest(probe, [dc_useast, dc_uswest]))
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica)
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
+                probe_dc_ca = make_mapping(df_probe, dc_canada, 'SameCountry')
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), 'NeighborCountry')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_ca, probe_dc_us, probe_dc_sa, probe_dc_fra], ignore_index=True)
 
-
             else:
-                probe_dc_use = make_mapping(df_probe, dc_useast)
-                probe_dc_usw = make_mapping(df_probe, dc_uswest)
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica)
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
+                probe_dc_use = make_mapping(df_probe, dc_useast, 'SameCountry')
+                probe_dc_usw = make_mapping(df_probe, dc_uswest, 'NeighborCountry')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_use, probe_dc_usw, probe_dc_sa, probe_dc_fra],
                     ignore_index=True)
 
         if probe.continent_code == "SA":
-            probe_dc_sa = make_mapping(df_probe, dc_southamerica)
-            probe_dc_use = make_mapping(df_probe, dc_useast)
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong)
+            probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'SameCountry')
+            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborCountry')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'NeighborContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_sa, probe_dc_use, probe_dc_fra, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "OC":
-            probe_dc_oce = make_mapping(df_probe, dc_oceanien)
-            probe_dc_use = make_mapping(df_probe, dc_useast)
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong)
+            probe_dc_oce = make_mapping(df_probe, dc_oceanien, 'SameCountry')
+            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborCountry')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'NeighborContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_oce, probe_dc_use, probe_dc_fra, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "AF":
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt)
-            probe_dc_mum = make_mapping(df_probe, dc_mumbai)
-            probe_dc_use = make_mapping(df_probe, dc_useast)
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong)
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'SameCountry')
+            probe_dc_mum = make_mapping(df_probe, dc_mumbai, 'NeighborCountry')
+            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_fra, probe_dc_mum, probe_dc_use, probe_dc_hon], ignore_index=True)
 
     return probe_datacenter_mapping
-
-mapping = create_mapping(df_datacenters)
-
-
-mapping.to_csv("mapping.csv" +str("_now"))
-
-mapping[["id" = mapping[["id"[mapping[["id"['continent_code'].apply(lambda val: all(val != s for s in ['AF', 'EU', 'NA', 'OC', 'SA']))]
-
-# Filtered country_code
-mapping[["id" = mapping[["id"[mapping[["id"['country_code'].apply(lambda val: all(val != s for s in ['IR', 'IN', 'IL', 'ID', 'HK', 'CY', 'CN', 'AZ', 'AM', 'SA', 'TR', 'TW']))]
-
-# Filtered Provider
-mapping[["id" = mapping[["id"[mapping[["id"['Provider'].apply(lambda val: all(val != s for s in ['Google', 'Microsoft']))]
-
-# Sorted id in ascending order
-mapping[["id" = mapping[["id".sort_values(by='id', ascending=True, na_position='first')
-
-result = mapping.groupby('AU')['id'].agg(list).reset_index()
-
-result['count'] = result['id'].apply(len)
-print(result)
-result.to_csv("mapping_result" +str("_now"))
-
-result.to_csv("mapping_result" + str("_now"))
- result.sort_values(by='count', ascending=True, inplace=True)
-print(result)
-#result['id'] = result["id"].astype(str)
-print(result)
 
 
 data_center_tag = pd.read_csv("Datacenters_for_tags_in_measurement.csv", keep_default_na=False)
@@ -282,7 +283,6 @@ data_center_tag = pd.read_csv("Datacenters_for_tags_in_measurement.csv", keep_de
 post_body = []
 post_name = []
 debug_information = []
-
 
 def create_ping_json(datacenter_domain_name, probe_set):
     # I want to create several tags in the measurement
@@ -367,49 +367,45 @@ def create_ping_json(datacenter_domain_name, probe_set):
 
 
 
-
-
 def main():
-    parameters = yaml.load(open('config.yaml', 'r'), Loader=yaml.FullLoader)
+    # Load the config file containing the parameters to create our measurements
+    parameters = yaml.load(open('config.yml', 'r'), Loader=yaml.FullLoader)
+    # Load the list of all probes dowlnoaded from RIPE Atlas
     with open(parameters['probe_json']) as file:
         data = json.loads(file.read())
     df_all_probes = pd.DataFrame(data['objects'])
+
     df_base_probes = filter_excluded_tags_and_inactive_probes(df_all_probes, parameters['general_excluded_tags'])
     del df_all_probes
+
     df_starlink_probes = get_starlink_probes(df_base_probes)
     df_wifi_probes = get_probes_by_tag_filtering(df_base_probes, parameters['wifi_required_tags'],
-                                                 parameters['wifi_included_tags'], parameters['wifi_excluded_tags'], 'wifi')
+                                                 parameters['wifi_included_tags'], parameters['wifi_excluded_tags'],
+                                                 'wifi')
     df_cellular_probes = get_probes_by_tag_filtering(df_base_probes, parameters['cellular_required_tags'],
-                                                     parameters['cellular_included_tags'], parameters['cellular_excluded_tags'], 'cellular')
+                                                     parameters['cellular_included_tags'],
+                                                     parameters['cellular_excluded_tags'], 'cellular')
     df_ethernet_probes = get_probes_by_tag_filtering(df_base_probes, parameters['ethernet_required_tags'],
-                                                        parameters['ethernet_included_tags'], parameters['ethernet_excluded_tags'], 'ethernet')
-    df_wifi_proximate_ethernet_probes = get_probes_by_proximity(df_ethernet_probes, df_wifi_probes, parameters['ethernet_proximity'])
-    df_cellular_proximate_ethernet_probes = get_probes_by_proximity(df_ethernet_probes, df_cellular_probes, parameters['ethernet_proximity'])
+                                                     parameters['ethernet_included_tags'],
+                                                     parameters['ethernet_excluded_tags'], 'ethernet')
+
+    df_wifi_proximate_ethernet_probes = get_ethernet_probes_by_proximity(df_wifi_probes, df_ethernet_probes)
+    df_cellular_proximate_ethernet_probes = get_ethernet_probes_by_proximity(df_cellular_probes, df_ethernet_probes)
     df_ethernet_probes = pd.concat([df_wifi_proximate_ethernet_probes, df_cellular_proximate_ethernet_probes], axis=0)
-    del df_wifi_proximate_ethernet_probes, df_cellular_proximate_ethernet_probes
 
     df_all_probes = pd.concat([df_cellular_probes, df_wifi_probes, df_starlink_probes, df_ethernet_probes])
     df_all_probes['continent_code'] = df_all_probes['country_code'].apply(convert_country_alpha2_to_continent)
 
     df_datacenters = pd.read_csv('datacenter_list.csv', na_values=[''], keep_default_na=False)
+    mapping = create_mapping(df_all_probes, df_datacenters)
+
+    mapping.to_csv("mapping.csv")
+
+    if parameters['start_measurements']:
+        for j in range(len(mapping)):
+            create_ping_json(mapping.iloc[j]['AU'], mapping.iloc[j]['id'])
 
 
 if __name__ == '__main__':
     main()
 
-
-
-
-
-
-
-
-
-#fig = px.scatter_geo(df_all_probes, lat='latitude', lon='longitude', color='probe_type')
-#fig.write_image("Review/figures/probes_map.pdf")
-#fig.show()
-
-#df_datacenters = pd.read_csv('data/Datacenters_selected.csv')
-#fig = px.scatter_geo(df_datacenters, lat='Latitude', lon='Longitude', hover_data=['Provider','Country','City'])
-#fig.write_image("Review/figures/datacenters.pdf")
-#fig.show()

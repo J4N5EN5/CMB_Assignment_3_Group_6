@@ -15,3 +15,11 @@ wifi_included_tags: ['wi-fi', 'wireless', 'system-wifi', 'fixed-wireless', 'wire
 wifi_excluded_tags: []
 
 
+ethernet_required_tags: ['home']
+ethernet_included_tags: ['fibre', 'cable', 'ftth']
+ethernet_excluded_tags: []
+
+start_measurements: False
+
+
+columns_to_drop: []

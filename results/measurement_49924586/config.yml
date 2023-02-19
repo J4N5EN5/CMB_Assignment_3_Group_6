@@ -1,0 +1,17 @@
+api_keys: {'paul': '32ea6dea-ec86-4ed9-9f20-004088064867',
+           'zhihang': 'f84f407c-c9a8-48bb-ae80-15858e5a0e9d',
+           'jan': '7373366d-d2b3-4655-b8fd-3c6d76d8059f'}
+
+probe_json: '20230207.json'
+
+general_excluded_tags: ['datacenter', 'datacentre', 'gcp', 'aws']
+
+cellular_required_tags: []
+cellular_included_tags: ['3g', '4g', '5g', 'lte', 'mobile']
+cellular_excluded_tags: ['dsl', 'vdsl', 'vdsl2', 'adsl']
+
+wifi_required_tags: ['home']
+wifi_included_tags: ['wi-fi', 'wireless', 'system-wifi', 'fixed-wireless', 'wireless-isp']
+wifi_excluded_tags: []
+
+

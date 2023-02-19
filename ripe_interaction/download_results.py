@@ -51,8 +51,11 @@ def add_datacenter_information(df_data, path_to_store):
     with open("{}/dc_to_msm_id_mapping.yml".format(path_to_store), "r") as f:
         data = yaml.safe_load(f)
     df_datacenter = pd.read_csv("{}/datacenter_list.csv".format(path_to_store))
-    df_mapping = pd.read_csv("ripe_interaction/mapping.csv", usecols=['AU', 'id', 'Scenario',
+    df_mapping = pd.read_csv("ripe_interaction/mapping.csv", usecols=['AU', 'id', 'Scenario', 'probe_country', 'probe_continent',
                                                                       'Continent', 'Country', 'City', 'connection_type'])
+
+
+
     df_mapping.rename(columns={'id': 'prb_id'}, inplace=True)
     # We replace the temporary indices with the msm_ids
     df_datacenter = df_datacenter.replace({"index": data})
@@ -72,7 +75,7 @@ def main():
     with open('ripe_interaction/config.yml') as f:
         parameters = yaml.safe_load(f)
 
-    df_data = get_ping_data(parameters['api_keys']['jan'])
+    df_data = get_ping_data(parameters['api_keys']['zhihang'])
     path_to_store = get_path_to_store(df_data)
     df_data = add_datacenter_information(df_data, path_to_store)
     df_data.drop(parameters['columns_to_drop'], axis=1, inplace=True)

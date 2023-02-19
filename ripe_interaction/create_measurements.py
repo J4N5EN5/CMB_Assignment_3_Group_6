@@ -116,7 +116,7 @@ def convert_country_alpha2_to_continent(country_2_code):
     return COUNTRY_ALPHA2_TO_CONTINENT[country_2_code]
 
 
-def make_mapping(df_probe, dc_city, scenario):
+def make_mapping(df_probe, dc_city, probe_country_here, probe_continent_here, scenario):
     """
     This function creates a mapping between probes and datacenters.
     :param df_probe: The single probe we want to map to datacenters
@@ -127,6 +127,10 @@ def make_mapping(df_probe, dc_city, scenario):
     # Create a dataframe with the probe repeated for each datacenter
     df_probe_city = pd.concat([df_probe] * len(dc_city), ignore_index=True)
     probe_dc_city = pd.concat([df_probe_city, dc_city.reset_index(drop=True)], axis=1)
+
+    probe_dc_city['probe_country'] = probe_country_here
+    probe_dc_city['probe_continent'] = probe_continent_here
+
     probe_dc_city['Scenario'] = scenario
     return probe_dc_city
 
@@ -186,92 +190,92 @@ def create_mapping(df_probes, df_datacenters):
         df_probe = pd.Series(probe, index=df_probes.columns).to_frame().T
 
         if probe.continent_code == "EU":
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'SameCountry')
-            probe_dc_lon = make_mapping(df_probe, dc_london, 'NeighborCountry')
-            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'SameContinent')
+            probe_dc_lon = make_mapping(df_probe, dc_london, probe.country_code, probe.continent_code, 'SameContinent')
+            probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'NeighborContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_fra, probe_dc_lon, probe_dc_use, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "AS":
             if probe.country_code in ["HK", "SG"]:
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'SameCountry')
-                probe_dc_sg = make_mapping(df_probe, dc_singapore, 'NeighborCountry')
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'SameContinent')
+                probe_dc_sg = make_mapping(df_probe, dc_singapore, probe.country_code, probe.continent_code, 'SameContinent')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_hon, probe_dc_sg],
                                                      ignore_index=True)
             elif probe.country_code in dc_asia["Country"].unique():
-                probe_dc_closest = make_mapping(df_probe, dc_asia[dc_asia["Country"] == probe.country_code],
+                probe_dc_closest = make_mapping(df_probe, dc_asia[dc_asia["Country"] == probe.country_code], probe.country_code, probe.continent_code,
                                                 'SameCountry')
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'NeighborCountry')
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'NeighborCountry')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_closest, probe_dc_hon],
                                                      ignore_index=True)
             else:
-                probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'SameCountry')
-                probe_dc_sg = make_mapping(df_probe, dc_singapore, 'NeighborCountry')
+                probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'SameContinent')
+                probe_dc_sg = make_mapping(df_probe, dc_singapore, probe.country_code, probe.continent_code, 'SameContinent')
                 probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_hon, probe_dc_sg],
                                                      ignore_index=True)
 
-            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
+            probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'NeighborContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat([probe_datacenter_mapping, probe_dc_use, probe_dc_fra],
                                                  ignore_index=True)
 
         if probe.continent_code == "NA":
             if probe.country_code == "US":
-                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]),
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), probe.country_code, probe.continent_code,
                                            'SameCountry')
-                probe_dc_ca = make_mapping(df_probe, dc_canada, 'NeighborCountry')
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
+                probe_dc_ca = make_mapping(df_probe, dc_canada, probe.country_code, probe.continent_code, 'NeighborCountry')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, probe.country_code, probe.continent_code, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'NeighborContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_us, probe_dc_ca, probe_dc_sa, probe_dc_fra], ignore_index=True)
 
             elif probe.country_code == "CA":
-                probe_dc_ca = make_mapping(df_probe, dc_canada, 'SameCountry')
-                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]),
+                probe_dc_ca = make_mapping(df_probe, dc_canada, probe.country_code, probe.continent_code, 'SameCountry')
+                probe_dc_us = make_mapping(df_probe, get_closest_datacenter_to_probe(probe, [dc_useast, dc_uswest]), probe.country_code, probe.continent_code,
                                            'NeighborCountry')
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, probe.country_code, probe.continent_code, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'NeighborContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_ca, probe_dc_us, probe_dc_sa, probe_dc_fra], ignore_index=True)
 
             else:
-                probe_dc_use = make_mapping(df_probe, dc_useast, 'SameCountry')
-                probe_dc_usw = make_mapping(df_probe, dc_uswest, 'NeighborCountry')
-                probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'NeighborContinent')
-                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'OtherContinent')
+                probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'SameCountry')
+                probe_dc_usw = make_mapping(df_probe, dc_uswest, probe.country_code, probe.continent_code, 'NeighborCountry')
+                probe_dc_sa = make_mapping(df_probe, dc_southamerica, probe.country_code, probe.continent_code, 'NeighborContinent')
+                probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'NeighborContinent')
 
                 probe_datacenter_mapping = pd.concat(
                     [probe_datacenter_mapping, probe_dc_use, probe_dc_usw, probe_dc_sa, probe_dc_fra],
                     ignore_index=True)
 
         if probe.continent_code == "SA":
-            probe_dc_sa = make_mapping(df_probe, dc_southamerica, 'SameCountry')
-            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborCountry')
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'NeighborContinent')
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
+            probe_dc_sa = make_mapping(df_probe, dc_southamerica, probe.country_code, probe.continent_code, 'SameContinent')
+            probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'NeighborContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'OtherContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_sa, probe_dc_use, probe_dc_fra, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "OC":
-            probe_dc_oce = make_mapping(df_probe, dc_oceanien, 'SameCountry')
-            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborCountry')
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'NeighborContinent')
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
+            probe_dc_oce = make_mapping(df_probe, dc_oceanien, probe.country_code, probe.continent_code, 'SameContinent')
+            probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'NeighborContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'OtherContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'NeighborContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_oce, probe_dc_use, probe_dc_fra, probe_dc_hon], ignore_index=True)
 
         if probe.continent_code == "AF":
-            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, 'SameCountry')
-            probe_dc_mum = make_mapping(df_probe, dc_mumbai, 'NeighborCountry')
-            probe_dc_use = make_mapping(df_probe, dc_useast, 'NeighborContinent')
-            probe_dc_hon = make_mapping(df_probe, dc_hongkong, 'OtherContinent')
+            probe_dc_fra = make_mapping(df_probe, dc_frankfurt, probe.country_code, probe.continent_code, 'NeighborContinent')
+            probe_dc_mum = make_mapping(df_probe, dc_mumbai, probe.country_code, probe.continent_code, 'OtherContinent')
+            probe_dc_use = make_mapping(df_probe, dc_useast, probe.country_code, probe.continent_code, 'OtherContinent')
+            probe_dc_hon = make_mapping(df_probe, dc_hongkong, probe.country_code, probe.continent_code, 'OtherContinent')
 
             probe_datacenter_mapping = pd.concat(
                 [probe_datacenter_mapping, probe_dc_fra, probe_dc_mum, probe_dc_use, probe_dc_hon], ignore_index=True)
@@ -279,7 +283,7 @@ def create_mapping(df_probes, df_datacenters):
     return probe_datacenter_mapping
 
 
-data_center_tag = pd.read_csv("Datacenters_for_tags_in_measurement.csv", keep_default_na=False)
+#data_center_tag = pd.read_csv("Datacenters_for_tags_in_measurement.csv", keep_default_na=False)
 # print(data_center_tag)
 
 post_body = []

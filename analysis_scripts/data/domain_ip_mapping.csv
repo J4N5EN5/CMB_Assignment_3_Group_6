@@ -1,0 +1,34 @@
+domain,ip,msm_id,dc_provider
+eu-central-1.ec2.cloudharmony.net,3.67.117.167,49834701,Amazon EC2
+germany-westcentral.azure.cloudharmony.net,20.113.132.119,49834700,Microsoft
+europe-west3.gce.cloudharmony.net,34.159.150.238,49834697,Google
+us-east4.gce.cloudharmony.net,34.86.28.234,49834695,Google
+us-east.azure.cloudharmony.net,20.25.24.249,49834691,Microsoft
+us-east-1.ec2.cloudharmony.net,107.22.235.245,49834682,Amazon EC2
+asia-east.azure.cloudharmony.net,20.239.88.164,49834678,Microsoft
+asia-east2.gce.cloudharmony.net,34.150.91.249,49834670,Google
+ap-east-1.ec2.cloudharmony.net,16.163.192.164,49834666,Amazon EC2
+europe-west2.gce.cloudharmony.net,35.246.85.119,49834662,Google
+eu-west-2.ec2.cloudharmony.net,18.133.90.21,49834658,Amazon EC2
+uk-south.azure.cloudharmony.net,51.142.226.230,49834654,Microsoft
+brazil-south.azure.cloudharmony.net,20.197.194.186,49834650,Microsoft
+sa-east-1.ec2.cloudharmony.net,177.71.249.31,49834645,Amazon EC2
+southamerica-east1.gce.cloudharmony.net,34.151.208.71,49834644,Google
+northamerica-northeast1.gce.cloudharmony.net,35.203.72.216,49834643,Google
+canada-central.azure.cloudharmony.net,20.63.36.139,49834642,Microsoft
+ca-central-1.ec2.cloudharmony.net,35.183.250.76,49834640,Amazon EC2
+us-west-1.ec2.cloudharmony.net,13.56.63.101,49834639,Amazon EC2
+us-west2-a.gce.cloudharmony.net,35.236.84.204,49834638,Google
+us-west.azure.cloudharmony.net,52.225.76.60,49834637,Microsoft
+asia-southeast1.gce.cloudharmony.net,34.124.156.203,49834636,Google
+asia-southeast.azure.cloudharmony.net,20.205.155.103,49834634,Microsoft
+ap-southeast-1.ec2.cloudharmony.net,18.138.89.251,49834633,Amazon EC2
+australia-southeast1.gce.cloudharmony.net,34.151.112.196,49834632,Google
+ap-southeast-2.ec2.cloudharmony.net,3.105.132.193,49834631,Amazon EC2
+australia-east.azure.cloudharmony.net,20.213.40.243,49834629,Microsoft
+asia-south1.gce.cloudharmony.net,34.100.147.104,49834628,Google
+india-west.azure.cloudharmony.net,52.183.134.32,49834627,Microsoft
+ap-south-1.ec2.cloudharmony.net,52.66.78.70,49834624,Amazon EC2
+japan-east.azure.cloudharmony.net,20.222.214.71,49834623,Microsoft
+asia-northeast1.gce.cloudharmony.net,35.221.115.203,49834621,Google
+ap-northeast-1.ec2.cloudharmony.net,18.178.235.175,49834534,Amazon EC2

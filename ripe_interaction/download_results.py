@@ -85,5 +85,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# df.drop(['af', 'proto', 'step', 'type', 'fw', 'mver', 'dst_name', 'stored_timestamp', 'size', 'lts',
-#         'src_addr', 'from', 'result'], axis=1, inplace=True)
+

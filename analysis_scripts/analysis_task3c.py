@@ -45,12 +45,6 @@ def data_preprocessing(df):
     return df
 
 
-def pipeline_question1(df):
-    return None
-
-
-def pipeline_question2(df):
-    return None
 
 def plot_print_rtt_by_continent(probe_type,title, df):
     fig, ax = plt.subplots()
@@ -113,8 +107,7 @@ def main():
     plt.clf()
     df_results = pd.read_csv(f"{measurement_path}/measurement_results.csv")
     df_results_preprocessed = data_preprocessing(df_results)
-    pipeline_question1(df_results_preprocessed)
-    pipeline_question2(df_results_preprocessed)
+
     pipeline_question3(df_results_preprocessed)
 
 
